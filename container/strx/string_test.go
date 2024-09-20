@@ -141,3 +141,39 @@ func TestFloatToStrings(t *testing.T) {
 		}
 	}
 }
+
+func TestToBytes(t *testing.T) {
+	tests := []string{
+		"0123456789",
+		"abcdefghijklmnopqrstuvwxyz",
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		"Hello, World!",
+	}
+
+	for _, test := range tests {
+		t.Run(test, func(t *testing.T) {
+			result := ToBytes(test)
+			if !reflect.DeepEqual(result, []byte(test)) {
+				t.Errorf("Expected %q, but got %q", test, string(result))
+			}
+		})
+	}
+}
+
+func BenchmarkStringToBytesUnsafe(b *testing.B) {
+	str := "0123456789,abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	for i := 0; i < b.N; i++ {
+		_ = ToBytes(str)
+	}
+}
+
+func _castBytes(str string) []byte {
+	return []byte(str)
+}
+
+func BenchmarkStringToBytesCasting(b *testing.B) {
+	str := "0123456789,abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	for i := 0; i < b.N; i++ {
+		_ = _castBytes(str)
+	}
+}

@@ -3,6 +3,7 @@ package str
 import (
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"golang.org/x/exp/constraints"
 )
@@ -72,4 +73,11 @@ func FloatToStrings[T constraints.Float](s []T) []string {
 		strs[i] = strconv.FormatFloat(float64(s[i]), 'f', -1, 64)
 	}
 	return strs
+}
+
+func ToBytes(str string) []byte {
+	if len(str) == 0 {
+		return nil
+	}
+	return unsafe.Slice(unsafe.StringData(str), len(str))
 }

@@ -1,6 +1,6 @@
 module github.com/hy-shine/gotiny
 
-go 1.19
+go 1.20
 
 require (
 	gitee.com/chunanyong/zorm v1.5.4

@@ -192,3 +192,15 @@ func GroupSortedAdjacent[K constraints.Integer](nums []K) [][]K {
 	result = append(result, currentGroup)
 	return result
 }
+
+func RemoveEmpty[T comparable](l []T) []T {
+	var empty T
+	list := make([]T, 0, len(l))
+	for i := range l {
+		if l[i] == empty {
+			continue
+		}
+		list = append(list, l[i])
+	}
+	return list
+}
