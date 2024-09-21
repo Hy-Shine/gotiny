@@ -5,50 +5,6 @@ import (
 	"testing"
 )
 
-func TestConcat(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    []string
-		expected string
-	}{
-		{
-			name:     "Empty slice",
-			input:    []string{},
-			expected: "",
-		},
-		{
-			name:     "Single string",
-			input:    []string{"hello"},
-			expected: "hello",
-		},
-		{
-			name:     "Multiple strings",
-			input:    []string{"Hello", "world", "!", "!", "!"},
-			expected: "Helloworld!!!",
-		},
-		{
-			name:     "Strings with different lengths",
-			input:    []string{"hello", "world", "!", "this", "is", "a", "test"},
-			expected: "helloworld!thisisatest",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			result := Concat(test.input, "")
-			if result != test.expected {
-				t.Errorf("Expected %q, but got %q", test.expected, result)
-			}
-		})
-	}
-}
-
-func BenchmarkStrConcat(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = Concat([]string{"hello", "world", "!"}, "")
-	}
-}
-
 func TestToNumber(t *testing.T) {
 	// Testing parsing of a valid integer string
 	intResult, err := ToNumber[int]("123")
@@ -108,16 +64,16 @@ func TestIntToStrings(t *testing.T) {
 	}
 
 	// Testing for a slice with positive integers
-	input2 := []int{1, 2, 3, 1e5, -100}
-	expected2 := []string{"1", "2", "3", "100000", "-100"}
+	input2 := []int{0, 1, 2, 3, 1e5, -100}
+	expected2 := []string{"0", "1", "2", "3", "100000", "-100"}
 	result2 := IntToStrings(input2)
 	if !reflect.DeepEqual(result2, expected2) {
 		t.Errorf("Expected %v, but got %v", expected2, result2)
 	}
 
 	// Testing for a slice with negative integers
-	input3 := []int{-1, -2, -3}
-	expected3 := []string{"-1", "-2", "-3"}
+	input3 := []int{-1, -2, -3, 0}
+	expected3 := []string{"-1", "-2", "-3", "0"}
 	result3 := IntToStrings(input3)
 	if !reflect.DeepEqual(result3, expected3) {
 		t.Errorf("Expected %v, but got %v", expected3, result3)
@@ -175,5 +131,33 @@ func BenchmarkStringToBytesCasting(b *testing.B) {
 	str := "0123456789,abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	for i := 0; i < b.N; i++ {
 		_ = _castBytes(str)
+	}
+}
+
+func TestRepeatJoin(t *testing.T) {
+	tests := []struct {
+		str, sep string
+		times    uint
+		exp      string
+	}{
+		{"", "", 0, ""},
+		{"", "", 1, ""},
+		{"hello", "", 0, ""},
+		{"hello", "", 1, "hello"},
+		{"hello", "", 2, "hellohello"},
+		{"hello", " ", 0, ""},
+		{"hello", " ", 1, "hello"},
+		{"hello", " ", 2, "hello hello"},
+		{"hello", "world", 0, ""},
+		{"hello", "world", 1, "hello"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.str, func(t *testing.T) {
+			result := RepeatJoin(test.str, test.sep, test.times)
+			if result != test.exp {
+				t.Errorf("Expected %q, but got %q", test.exp, result)
+			}
+		})
 	}
 }

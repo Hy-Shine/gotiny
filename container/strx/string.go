@@ -28,10 +28,6 @@ func Reverse(s string) string {
 	return string(runes)
 }
 
-func Concat(strs []string, sep string) string {
-	return strings.Join(strs, sep)
-}
-
 func ConcatFunc(strs []string, sep string, f func(string) (string, bool)) string {
 	newStrs := make([]string, 0, len(strs))
 	for i := range strs {
@@ -59,10 +55,16 @@ func ToLower(s *string) {
 	}
 }
 
-func IntToStrings[T constraints.Integer](s []T) []string {
-	strs := make([]string, len(s))
-	for i := range s {
-		strs[i] = strconv.FormatInt(int64(s[i]), 10)
+func IntToStrings[T constraints.Integer](l []T) []string {
+	strs := make([]string, len(l))
+	for i := range l {
+		if l[i] == 0 {
+			strs[i] = "0"
+		} else if l[i] < 0 {
+			strs[i] = strconv.FormatInt(int64(l[i]), 10)
+		} else {
+			strs[i] = strconv.FormatUint(uint64(l[i]), 10)
+		}
 	}
 	return strs
 }
@@ -80,4 +82,13 @@ func ToBytes(str string) []byte {
 		return nil
 	}
 	return unsafe.Slice(unsafe.StringData(str), len(str))
+}
+
+func RepeatJoin(str, sep string, times uint) string {
+	elems := make([]string, 0, times)
+	for i := uint(0); i < times; i++ {
+		elems = append(elems, str)
+	}
+
+	return strings.Join(elems, sep)
 }
