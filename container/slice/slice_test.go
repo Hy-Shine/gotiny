@@ -333,3 +333,47 @@ func TestMergeSortedAdjacent(t *testing.T) {
 		})
 	}
 }
+
+func TestToIndexMap(t *testing.T) {
+	type args struct {
+		nums []int
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[int]int
+	}{
+		{
+			name: "Empty slice",
+			args: args{nums: []int{}},
+			want: map[int]int{},
+		},
+		{
+			name: "Single element",
+			args: args{nums: []int{1}},
+			want: map[int]int{0: 1},
+		},
+		{
+			name: "Sorted consecutive numbers",
+			args: args{nums: []int{1, 2, 3, 4, 5}},
+			want: map[int]int{0: 1, 1: 2, 2: 3, 3: 4, 4: 5},
+		},
+		{
+			name: "Non-consecutive numbers",
+			args: args{nums: []int{1, 3, 5, 7}},
+			want: map[int]int{0: 1, 1: 3, 2: 5, 3: 7},
+		},
+		{
+			name: "Multiple groups",
+			args: args{nums: []int{1, 2, 2, 3, 5, 6, 7, 8, 10, 10}},
+			want: map[int]int{0: 1, 1: 2, 2: 2, 3: 3, 4: 5, 5: 6, 6: 7, 7: 8, 8: 10, 9: 10},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToIndexMap(tt.args.nums); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ToIndexMap() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

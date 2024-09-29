@@ -85,9 +85,13 @@ func Split[T any](list []T, size int) [][]T {
 }
 
 func IntsToStrings[K constraints.Integer](l []K) []string {
-	result := make([]string, len(l))
-	for i, v := range l {
-		result[i] = strconv.FormatInt(int64(v), 10)
+	result := make([]string, 0, len(l))
+	for _, v := range l {
+		if v < 0 {
+			result = append(result, strconv.FormatInt(int64(v), 10))
+		} else {
+			result = append(result, strconv.FormatUint(uint64(v), 10))
+		}
 	}
 	return result
 }
@@ -203,4 +207,12 @@ func RemoveEmpty[T comparable](l []T) []T {
 		list = append(list, l[i])
 	}
 	return list
+}
+
+func ToIndexMap[T any](l []T) map[int]T {
+	m := make(map[int]T, len(l))
+	for i := range l {
+		m[i] = l[i]
+	}
+	return m
 }
