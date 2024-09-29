@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -13,8 +14,9 @@ func TestLock(t *testing.T) {
 		Address: "127.0.0.1",
 		Port:    6379,
 	}
-	_ = GetInstance(*rCfg)
 
+	client = GetInstance(*rCfg)
+	ctx := context.Background()
 	type args struct {
 		n int
 		r bool
@@ -24,7 +26,7 @@ func TestLock(t *testing.T) {
 	go func() {
 		for i := 0; i < 100; i++ {
 			go func(i int) {
-				got, _ := Lock("test", 15*time.Second, cast.ToString(i))
+				got, _ := Lock(ctx, "test", 15*time.Second, cast.ToString(i))
 				if got {
 					fmt.Printf("N0.%d got lock\n", i)
 				} else {

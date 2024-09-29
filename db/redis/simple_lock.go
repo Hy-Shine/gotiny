@@ -11,8 +11,8 @@ import (
 // flag is a unique identifier for the locking process.
 //
 // It returns true if the lock is acquired, false otherwise.
-func Lock(key string, ttl time.Duration, flag string) (bool, error) {
-	lock, err := GetInstance().SetNX(context.TODO(), key, flag, ttl).Result()
+func Lock(ctx context.Context, key string, ttl time.Duration, flag string) (bool, error) {
+	lock, err := client.SetNX(ctx, key, flag, ttl).Result()
 	return lock, err
 }
 
@@ -28,8 +28,8 @@ end`
 //
 // If flag is not empty, it first checks if it's the lock owner before releasing it,
 // preventing the lock from being released by an unauthorized process.
-func UnLock(key string, flag string) (bool, error) {
-	r, err := GetInstance().Eval(context.TODO(), script, []string{key}, flag).Result()
+func UnLock(ctx context.Context, key string, flag string) (bool, error) {
+	r, err := client.Eval(ctx, script, []string{key}, flag).Result()
 	if err != nil {
 		return false, err
 	}
