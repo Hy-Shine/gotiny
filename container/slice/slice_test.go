@@ -377,3 +377,31 @@ func TestToIndexMap(t *testing.T) {
 		})
 	}
 }
+
+func TestRepeat(t *testing.T) {
+	tests := []struct {
+		name string
+		v    any
+		n    int
+		want any
+	}{
+		// string
+		{name: "string-nil", v: "a", n: -1, want: nil},
+		{name: "string-empty", v: "a", n: 0, want: nil},
+		{name: "string", v: "a", n: 3, want: []any{"a", "a", "a"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result any
+			switch tt.v.(type) {
+			case string:
+				result = Repeat(tt.v.(string), tt.n)
+			}
+
+			if !reflect.DeepEqual(result, tt.want) {
+				t.Errorf("Repeat(%v, %d) = %v, want %v", tt.v, tt.n, result, tt.want)
+			}
+		})
+	}
+}
