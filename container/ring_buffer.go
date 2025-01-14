@@ -1,16 +1,17 @@
 package container
 
 import (
+	"errors"
 	"sync"
 )
 
 type RingBuffer[T any] struct {
+	mu     sync.RWMutex
 	buffer []T
 	size   int
 	count  int
 	head   int
 	tail   int
-	lock   sync.RWMutex
 }
 
 // NewRingBuffer returns a new Ring[T] with the given size.
@@ -19,29 +20,39 @@ type RingBuffer[T any] struct {
 // and size should be greater than 0.
 // The underlying buffer is initialized with the given size.
 // The returned Ring is empty.
-func NewRingBuffer[T any](size uint) *RingBuffer[T] {
-	return &RingBuffer[T]{
-		size:   int(size),
-		buffer: make([]T, size),
+func NewRingBuffer[T any](size int) (*RingBuffer[T], error) {
+	if size <= 0 {
+		return nil, errors.New("size must be greater than 0")
 	}
+
+	return &RingBuffer[T]{
+		size:   size,
+		buffer: make([]T, size),
+	}, nil
+}
+
+// Capacity returns the capacity of the Ring
+func (r *RingBuffer[T]) Capacity() int {
+	return r.size
 }
 
 // Len returns the number of elements in the Ring
 func (r *RingBuffer[T]) Len() int {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	return r.count
 }
 
-// Read removes and returns the element at the head of the Ring.
+// Read reads and returns the element at the head of the Ring.
 func (r *RingBuffer[T]) Read() (ele T, ok bool) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	if r.count == 0 {
 		var zero T
-		return zero, false // Return zero value and false for empty
+		// Return zero value and false for empty
+		return zero, false
 	}
 
 	value := r.buffer[r.head]
@@ -50,26 +61,50 @@ func (r *RingBuffer[T]) Read() (ele T, ok bool) {
 	return value, true
 }
 
+// ReadBatch reads and returns the elements at the head of the Ring.
+func (r *RingBuffer[T]) ReadBatch(count int) []T {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if r.count == 0 || count <= 0 {
+		return nil
+	}
+
+	if count > r.count {
+		count = r.count
+	}
+
+	result := make([]T, count)
+	for i := 0; i < count; i++ {
+		result[i] = r.buffer[r.head]
+		r.head = (r.head + 1) % r.size
+		r.count--
+	}
+	return result
+}
+
 // Write adds an element to the tail of the Ring.
 // If the Ring is full, the element is not added and false is returned.
 func (r *RingBuffer[T]) Write(ele T) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	return r.write(false, ele)
 }
 
 // MustWrite adds an element to the tail of the Ring.
 // Even if the Ring is full, the element is added.
 func (r *RingBuffer[T]) MustWrite(ele T) {
+	r.mu.Lock()
 	r.write(true, ele)
+	r.mu.Unlock()
 }
 
 // write adds an element to the tail of the Ring.
 // If the Ring is full, the element is not added and false is returned.
 // Otherwise, true is returned.
 func (r *RingBuffer[T]) write(must bool, ele T) bool {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
-	if r.size == 0 || r.count == r.size && !must {
+	if r.count == r.size && !must {
 		return false
 	}
 
@@ -83,8 +118,18 @@ func (r *RingBuffer[T]) write(must bool, ele T) bool {
 
 // IsFull returns true if the Ring is full
 func (r *RingBuffer[T]) IsFull() bool {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	return r.count == r.size
+}
+
+// Reset clears the Ring
+func (r *RingBuffer[T]) Reset() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.head = 0
+	r.tail = 0
+	r.count = 0
 }

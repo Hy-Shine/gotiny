@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewRingBuffer(t *testing.T) {
-	rb := NewRingBuffer[int](5)
+	rb, _ := NewRingBuffer[int](5)
 	if rb.Len() != 0 {
 		t.Errorf("Expected length 0, got %d", rb.Len())
 	}
@@ -18,7 +18,7 @@ func TestNewRingBuffer(t *testing.T) {
 }
 
 func TestReadWrite(t *testing.T) {
-	rb := NewRingBuffer[int](3)
+	rb, _ := NewRingBuffer[int](3)
 
 	// Test basic write and read
 	if !rb.Write(1) {
@@ -38,7 +38,7 @@ func TestReadWrite(t *testing.T) {
 }
 
 func TestOverflow(t *testing.T) {
-	rb := NewRingBuffer[int](2)
+	rb, _ := NewRingBuffer[int](2)
 
 	// Fill buffer
 	if !rb.Write(1) {
@@ -67,7 +67,7 @@ func TestOverflow(t *testing.T) {
 }
 
 func TestMustWrite(t *testing.T) {
-	rb := NewRingBuffer[int](2)
+	rb, _ := NewRingBuffer[int](2)
 
 	// Fill buffer
 	rb.MustWrite(1)
@@ -87,7 +87,7 @@ func TestMustWrite(t *testing.T) {
 }
 
 func TestEmptyRead(t *testing.T) {
-	rb := NewRingBuffer[int](2)
+	rb, _ := NewRingBuffer[int](2)
 
 	val, ok := rb.Read()
 	if ok || val != 0 {
@@ -96,7 +96,7 @@ func TestEmptyRead(t *testing.T) {
 }
 
 func TestConcurrentAccess(t *testing.T) {
-	rb := NewRingBuffer[int](30)
+	rb, _ := NewRingBuffer[int](30)
 	flush := make(chan bool)
 	done := make(chan bool)
 	finished := make(chan bool)
@@ -160,17 +160,23 @@ func TestConcurrentAccess(t *testing.T) {
 }
 
 func TestRingBuffer_ZeroSize(t *testing.T) {
-	rb := NewRingBuffer[int](0)
+	rb, err := NewRingBuffer[int](0)
+	assert.Nil(t, rb)
+	assert.NotNil(t, err)
+}
 
-	assert.True(t, rb.Len() == 0)
-	assert.True(t, rb.IsFull())
+func TestRingBuffer_ReadBatch(t *testing.T) {
+	rb, _ := NewRingBuffer[int](5)
+	for i := 0; i < 5; i++ {
+		rb.Write(i)
+	}
 
-	rb.MustWrite(0)
-	rb.MustWrite(1)
+	l := rb.ReadBatch(3)
+	assert.Equal(t, l, []int{0, 1, 2})
 
-	ok := rb.Write(0)
-	assert.False(t, ok)
+	l = rb.ReadBatch(2)
+	assert.Equal(t, l, []int{3, 4})
 
-	_, ok = rb.Read()
-	assert.False(t, ok)
+	l = rb.ReadBatch(1)
+	assert.True(t, len(l) == 0)
 }
